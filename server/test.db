@@ -1,0 +1,25 @@
+{
+  "refs": {
+    "test": "01JNAT8V0WVB02DXGXZ3KPYD0V",
+    "user": "01JND0MJEHG5TJZN5P9DWYH23V"
+  },
+  "01JNAT8V0WVB02DXGXZ3KPYD0V": {
+    "dbSerializerTransform": "dbObject",
+    "id": "01JNAT8V0WVB02DXGXZ3KPYD0V",
+    "name": "testObj",
+    "awesomeFunc": {
+      "dbSerializerTransform": "function",
+      "code": "async () => 1"
+    },
+    "coolBool": false,
+    "selfRef": {
+      "dbSerializerTransform": "ref",
+      "id": "01JNAT8V0WVB02DXGXZ3KPYD0V"
+    }
+  },
+  "01JND0MJEHG5TJZN5P9DWYH23V": {
+    "dbSerializerTransform": "dbObject",
+    "id": "01JND0MJEHG5TJZN5P9DWYH23V",
+    "name": "Generic User"
+  }
+}
