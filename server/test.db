@@ -1,25 +1,24 @@
 {
   "refs": {
-    "test": "01JNAT8V0WVB02DXGXZ3KPYD0V",
-    "user": "01JND0MJEHG5TJZN5P9DWYH23V"
+    "root": "01JNY5TTYGCM2G14AWV5V0TGXA",
+    "user": "01JND0MJEHG5TJZN5P9DWYH23V",
+    "mel": "01JNYBK7GXM1YYER29VVARR09Y"
   },
-  "01JNAT8V0WVB02DXGXZ3KPYD0V": {
+  "01JNY5TTYGCM2G14AWV5V0TGXA": {
     "dbSerializerTransform": "dbObject",
-    "id": "01JNAT8V0WVB02DXGXZ3KPYD0V",
-    "name": "testObj",
-    "awesomeFunc": {
-      "dbSerializerTransform": "function",
-      "code": "async () => 1"
-    },
-    "coolBool": false,
-    "selfRef": {
-      "dbSerializerTransform": "ref",
-      "id": "01JNAT8V0WVB02DXGXZ3KPYD0V"
-    }
+    "id": "01JNY5TTYGCM2G14AWV5V0TGXA",
+    "name": "Root Object"
   },
   "01JND0MJEHG5TJZN5P9DWYH23V": {
     "dbSerializerTransform": "dbObject",
     "id": "01JND0MJEHG5TJZN5P9DWYH23V",
-    "name": "Generic User"
+    "name": "Generic User",
+    "parent": "01JNY5TTYGCM2G14AWV5V0TGXA"
+  },
+  "01JNYBK7GXM1YYER29VVARR09Y": {
+    "dbSerializerTransform": "dbObject",
+    "name": "Mel",
+    "id": "01JNYBK7GXM1YYER29VVARR09Y",
+    "parent": "01JND0MJEHG5TJZN5P9DWYH23V"
   }
 }
