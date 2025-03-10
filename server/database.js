@@ -5,6 +5,7 @@ import fs from 'node:fs'
  *  - They need to be reliably serializable in order to survive the checkpoint/restore of the database
  *  - They need to store functions that survive serialization
  *  - Those stored functions need to reference other database objects after deserialization
+ *  - They need to preserve their connection to their prototype (parent) object when serialized
  */
 
 class DatabaseObject {
@@ -31,7 +32,7 @@ export function createObject(parent, data) {
 export function deleteObject(obj) {
     if (obj.constructor.name !== 'DatabaseObject')
         throw new Error('Object is not a database object')
-    if (obj.children?.[0])
+    if (children(obj).length)
         throw new Error('Cannot delete object with children')
     // Obj might still be referenced by other objects.  We change its parent to $garbage so it's obvious that
     // the object is dead when it's referenced
@@ -57,6 +58,16 @@ export function children(parent) {
     return kids
 }
 
+export function ancestors(obj) {
+    const ancs = []
+    let next = parent(obj)
+    while (next) {
+        ancs.push(next)
+        next = parent(next)
+    }
+    return ancs
+}
+
 export function descendants(obj) {
     const descs = []
     for (const kid of children(obj)) {
@@ -68,7 +79,9 @@ export function descendants(obj) {
 export function parent(obj) {
     if (obj.constructor.name !== 'DatabaseObject')
         throw new Error('Not a database object')
-    return Object.getPrototypeOf(obj)
+    const parent = Object.getPrototypeOf(obj)
+    // We don't want to expose anything above the root object, so we check for an id to confirm we're still in the DB
+    return parent.id ? parent : null
 }
 
 const dbDataFile = process.argv[2]

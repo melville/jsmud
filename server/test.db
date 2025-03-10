@@ -7,6 +7,14 @@
   "01JNY5TTYGCM2G14AWV5V0TGXA": {
     "dbSerializerTransform": "dbObject",
     "id": "01JNY5TTYGCM2G14AWV5V0TGXA",
+    "test": {
+      "dbSerializerTransform": "function",
+      "code": "function test() { return this }"
+    },
+    "toString": {
+      "dbSerializerTransform": "function",
+      "code": "function () { return `${this.name ?? 'Unnamed' } (${this.id})` }"
+    },
     "name": "Root Object"
   },
   "01JND0MJEHG5TJZN5P9DWYH23V": {

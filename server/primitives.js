@@ -1,7 +1,8 @@
-import { changeParent, children, createObject, deleteObject, descendants, dumpDatabase, loadDatabase, parent } from './database.js'
+import { ancestors, changeParent, children, createObject, deleteObject, descendants, dumpDatabase, loadDatabase, parent } from './database.js'
 import { ulid } from 'ulid'
 
 export function createPrimitives() {
+    global.ancestors = ancestors
     global.changeParent = changeParent
     global.children = children
     global.createObject = createObject
