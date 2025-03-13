@@ -76,6 +76,18 @@ export function descendants(obj) {
     return descs
 }
 
+export function leaves(obj) {
+    const lvs = []
+    for (const kid of children(obj)) {
+        const d = descendants(kid)
+        if (d.length)
+            lvs.push(...leaves(kid))
+        else
+            lvs.push(kid)
+    }
+    return lvs
+}
+
 export function parent(obj) {
     if (obj.constructor.name !== 'DatabaseObject')
         throw new Error('Not a database object')
