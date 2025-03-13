@@ -49,4 +49,11 @@ export class Server {
     announceAll(text) {
         this.connections.forEach( connection => connection.announce(text) )
     }
+
+    connectionFor(user) {
+        for (const connection of this.connections) {
+            if (connection.connectedUser === user) return connection
+        }
+        return null
+    }
 }
