@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { clearTask, scheduleTask } from './tasks.js'
 
 /**
  * Database objects are special because:
@@ -42,7 +43,7 @@ export function deleteObject(obj) {
 
 export function changeParent(obj, parent) {
     if (parent.constructor.name !== 'DatabaseObject')
-        throw new Error('Invalid parent object')
+        throw new TypeError('Invalid parent object')
     // Make sure the new parent isn't a descendant of obj
     if (descendants(obj).includes(parent))
         throw new Error('New parent is a descendant of the object')
@@ -90,7 +91,7 @@ export function leaves(obj) {
 
 export function parent(obj) {
     if (obj.constructor.name !== 'DatabaseObject')
-        throw new Error('Not a database object')
+        throw new TypeError('Not a database object')
     const parent = Object.getPrototypeOf(obj)
     // We don't want to expose anything above the root object, so we check for an id to confirm we're still in the DB
     return parent.id ? parent : null
@@ -100,6 +101,12 @@ const dbDataFile = process.argv[2]
 
 export function loadDatabase() {
     console.log(`Loading database...`)
+
+    // Kill any scheduled tasks in the current DB if we are reloading in a running instance
+    const scheduled = global.db?.tasks
+    if (scheduled)
+        Object.keys(scheduled).forEach( id => clearTask(id) )
+
     const db = JSON.parse(fs.readFileSync(dbDataFile))
     restoreDbObjects(db)
     // Setup shortcut refs for important objects
@@ -107,6 +114,7 @@ export function loadDatabase() {
         global[`$${name}`] = db[id]
     }
     global.db = db
+
     console.log(`Database loaded.  Created ${Object.keys(db).length - 1} objects.  Added ${Object.keys(db.refs).length} refs.`)
 }
 
@@ -114,6 +122,7 @@ export function dumpDatabase() {
     console.log(`Dumping database...`)
     const serializedDB = JSON.stringify(db, transformDbObjects, 2)
     fs.writeFileSync(dbDataFile, serializedDB)
+    console.log(`Finished dumping database.`)
 }
 
 function transformDbObjects(key, value) {
@@ -124,6 +133,8 @@ function transformDbObjects(key, value) {
             else
                 return { dbSerializerTransform: 'function', code: value.toString() }
         case 'object':
+            if (value.constructor.name === 'Timeout')
+                return undefined // Ignore task timeouts, they will be recreated if the DB is restored
             if (value.constructor.name === 'DatabaseObject')
                 if (this === db) { // top-level DB object, should be fully serialized
                     const parentObj = Object.getPrototypeOf(value)
@@ -143,7 +154,7 @@ function transformDbObjects(key, value) {
 
 function restoreDbObjects(db) {
     for (const [id, obj] of Object.entries(db)) {
-        // Everything but the 'refs' field should be a dbObject
+        // Everything but the 'refs' and 'tasks' fields should be a dbObject
         if (obj.dbSerializerTransform === 'dbObject') {
             // Transform function code back to functions
             for (const [field, value] of Object.entries(obj)) {
@@ -162,6 +173,7 @@ function restoreDbObjects(db) {
         }
     }
     restoreRefs(db, db)
+    restoreTasks(db)
 }
 
 function restoreRefs(node, db) {
@@ -179,5 +191,18 @@ function restoreRefs(node, db) {
         } else {
             restoreRefs(value, db)
         }
+    }
+}
+
+function restoreTasks(db) {
+    if (!db.tasks) db.tasks = {}
+    for (const [id, taskDef] of Object.entries(db.tasks)) {
+        // We expect the tasks to be in insertion order, which is chronological
+        const { func: { code }, runAt, args } = taskDef
+        const func = new Function(`return ${code}`)()
+        db.tasks[id].timeoutInfo = setTimeout(() => {
+            func(...args)
+            clearTask(id)
+        }, runAt - Date.now())
     }
 }

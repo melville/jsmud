@@ -25,7 +25,7 @@
     "name": "Generic User",
     "tell": {
       "dbSerializerTransform": "function",
-      "code": "function (text) { server.connectionFor(this).announce(text) }"
+      "code": "function (text) { server.connectionFor(this)?.announce(text) }"
     },
     "command_say": {
       "dbSerializerTransform": "function",
@@ -48,6 +48,10 @@
       "dbSerializerTransform": "function",
       "code": "function (text) { try { this.tell(`${ eval?.(text) }`) } catch (error) { this.tell(error.stack) } }"
     },
+    "command_tasks": {
+      "dbSerializerTransform": "function",
+      "code": "function () { const taskList = tasks(); this.tell(\"ID                         Time          Code\"); taskList.forEach( task => this.tell(`${task.id} ${task.runAt} ${task.func.toString().substring(0, 40)}`) ) }"
+    },
     "parent": "01JND0MJEHG5TJZN5P9DWYH23V"
   },
   "01JP6SKFQNTMA9BTCMDVV9NZN3": {
@@ -63,5 +67,20 @@
     "password": "test",
     "id": "01JP6SX31466DXS068R9RHW1KT",
     "parent": "01JP12YDJ1C99A16K1VB9CP29Z"
+  },
+  "tasks": {
+    "01JPGJNZMJ2Q0ACDPJB0WX35N5": {
+      "id": "01JPGJNZMJ2Q0ACDPJB0WX35N5",
+      "func": {
+        "dbSerializerTransform": "function",
+        "code": "(a, b, c) => $mel.tell(`BOOM ${a} ${b} ${c}`)"
+      },
+      "runAt": 1742165764339,
+      "args": [
+        1,
+        2,
+        3
+      ]
+    }
   }
 }
