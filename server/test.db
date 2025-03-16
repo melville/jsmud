@@ -50,7 +50,7 @@
     },
     "command_tasks": {
       "dbSerializerTransform": "function",
-      "code": "function () { const taskList = tasks(); this.tell(\"ID                         Time          Code\"); taskList.forEach( task => this.tell(`${task.id} ${task.runAt} ${task.func.toString().substring(0, 40)}`) ) }"
+      "code": "function () { const taskList = tasks(); this.tell(\"ID                         Time          Code\"); taskList.forEach( task => { const time = `${task.interval ? '@ ' : ''}${task.runAt || task.interval}`; this.tell(`${task.id} ${time.padEnd(13)} ${task.func.toString().substring(0, 60)}` ) } ) }"
     },
     "parent": "01JND0MJEHG5TJZN5P9DWYH23V"
   },
@@ -69,13 +69,24 @@
     "parent": "01JP12YDJ1C99A16K1VB9CP29Z"
   },
   "tasks": {
-    "01JPGJNZMJ2Q0ACDPJB0WX35N5": {
-      "id": "01JPGJNZMJ2Q0ACDPJB0WX35N5",
+    "01JPGMG31TPWRVYBZ2036TC4FF": {
+      "id": "01JPGMG31TPWRVYBZ2036TC4FF",
+      "func": {
+        "dbSerializerTransform": "function",
+        "code": "(x) => $mel.tell(`${new Date()} -- ${x}`)"
+      },
+      "interval": 60000,
+      "args": [
+        "ding"
+      ]
+    },
+    "01JPGN0PXJZKS4Y2DDF02AQ8JN": {
+      "id": "01JPGN0PXJZKS4Y2DDF02AQ8JN",
       "func": {
         "dbSerializerTransform": "function",
         "code": "(a, b, c) => $mel.tell(`BOOM ${a} ${b} ${c}`)"
       },
-      "runAt": 1742165764339,
+      "runAt": 1742168213011,
       "args": [
         1,
         2,

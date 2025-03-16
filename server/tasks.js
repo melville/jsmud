@@ -13,6 +13,17 @@ export function scheduleTask(func, timeout, ...args) {
     return id
 }
 
+export function scheduleTaskInterval(func, timeout, ...args) {
+    if (typeof func !== 'function')
+        throw new Error('Task to schedule must be a function')
+    if (func.toString().includes('[native code]'))
+        throw new Error('Task function contains native code.  Scheduled tasks must be serializable')
+    const id = ulid()
+    const timeoutInfo = setInterval(func, timeout, ...args)
+    db.tasks[id] = { id, func, timeoutInfo, interval: timeout, args }
+    return id
+}
+
 export function clearTask(taskId) {
     const { timeoutInfo } = db.tasks[taskId]
     if (timeoutInfo) {

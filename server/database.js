@@ -198,11 +198,16 @@ function restoreTasks(db) {
     if (!db.tasks) db.tasks = {}
     for (const [id, taskDef] of Object.entries(db.tasks)) {
         // We expect the tasks to be in insertion order, which is chronological
-        const { func: { code }, runAt, args } = taskDef
+        const { func: { code }, runAt, interval, args } = taskDef
         const func = new Function(`return ${code}`)()
-        db.tasks[id].timeoutInfo = setTimeout(() => {
-            func(...args)
-            clearTask(id)
-        }, runAt - Date.now())
+        if (runAt) {
+            db.tasks[id].timeoutInfo = setTimeout(() => {
+                func(...args)
+                clearTask(id)
+            }, runAt - Date.now())
+        } else if (interval) {
+            db.tasks[id].timeoutInfo = setInterval(func, interval, ...args)
+            // These will only go away when something else calls clearTask
+        }
     }
 }

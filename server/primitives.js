@@ -1,5 +1,5 @@
 import { ancestors, changeParent, children, createObject, deleteObject, descendants, dumpDatabase, leaves, loadDatabase, parent } from './database.js'
-import { clearTask, scheduleTask, tasks } from './tasks.js'
+import { clearTask, scheduleTask, scheduleTaskInterval, tasks } from './tasks.js'
 import { ulid } from 'ulid'
 
 export function createPrimitives() {
@@ -15,6 +15,7 @@ export function createPrimitives() {
     global.loadDatabase = loadDatabase
     global.parent = parent
     global.scheduleTask = scheduleTask
+    global.scheduleTaskInterval = scheduleTaskInterval
     global.tasks = tasks
     global.ulid = ulid
 }
