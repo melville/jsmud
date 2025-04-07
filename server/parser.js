@@ -22,11 +22,15 @@ export function handleInput(connection, message) {
 
     if (!command) return
 
-    if (connection.connectedUser) {
-        const user = connection.connectedUser
+    if (connection.user) {
+        const user = connection.user
         const commandFunc = `command_${command}`
         if (typeof user[commandFunc] === 'function') {
-            user[`command_${command}`](argStr)
+            try {
+                user[`command_${command}`](argStr, connection)
+            } catch (error) {
+                connection.announce(error.stack)
+            }
         } else {
             connection.announce(`No such command ('${command}')`)
         }
@@ -41,8 +45,10 @@ function handleUnconnectedCommand(connection, command, argStr) {
         if (args.length === 2) {
             const user = leaves($user).find( user => user.name === args[0] )
             if (user && user.password === args[1]) {
-                connection.connectedUser = user
+                connection.user = user
                 connection.announce('*** Connected ***')
+                connectionManager.announceAll(`*** ${user.name} connected`, [ user ])
+                console.log(`User ${user.name} (${user.id}) connected via ${connection.constructor.name} (${connection.id}) from ${connection.sourceAddress}`)
                 return
             }
         }

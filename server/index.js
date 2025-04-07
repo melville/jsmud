@@ -1,10 +1,14 @@
-import { Server } from './websocketServer.js'
+import { WebSocketListener } from './websocketServer.js'
 import { createPrimitives } from './primitives.js'
+import { setupConnections } from './connection.js'
+import { TelnetListener } from './telnetServer.js'
 
 createPrimitives()
 loadDatabase()
+setupConnections()
 
-global.server = new Server(6969)
+global.webSocketListener = new WebSocketListener(6969)
+global.telnetListener = new TelnetListener(6970)
 
 // Prevent server death for unhandled sync or async errors
 process.on('uncaughtException', (err) => console.error('Unhandled exception:', err))

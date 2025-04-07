@@ -1,31 +1,30 @@
 import { WebSocketServer } from 'ws'
 import { handleInput } from './parser.js'
-import { ulid } from 'ulid'
+import { Connection } from './connection.js'
 
-class Connection {
-    constructor(websocket) {
-        this.id = ulid()
-        this.connectedAt = Date.now()
-        this.websocket = websocket
+class WebSocketConnection extends Connection {
+    webSocket = null
+    constructor(webSocket) {
+        super()
+        this.webSocket = webSocket
     }
 
+    get sourceAddress() { console.log(this.webSocket); return this.webSocket._socket.remoteAddress }
+
     announce(text) {
-        this.websocket.send(text)
+        this.webSocket.send(text)
     }
 }
 
-export class Server {
-    connections = new Set()
-
+export class WebSocketListener {
     constructor(port) {
         this.port = port
         this.listener = new WebSocketServer({port})
 
         this.listener.on('connection', websocket => {
-            const connection = new Connection(websocket)
-            this.connections.add(connection)
-            console.log('Websocket client connected from ', websocket._socket.remoteAddress)
-            this.announceAll(`*** ${connection.id} connected from ${websocket._socket.remoteAddress}`)
+            const connection = new WebSocketConnection(websocket)
+            connectionManager.addConnection(connection)
+            console.log(`Websocket client (${connection.id}) connected from ${websocket._socket.remoteAddress}`)
 
             websocket.on('message', message => {
                 console.log(`[${connection.id}] ${message}`)
@@ -33,9 +32,8 @@ export class Server {
             })
 
             websocket.on('close', () => {
-                this.connections.delete(connection)
-                console.log(`Websocket client disconnected: ${connection.id}`)
-                this.announceAll(`*** ${connection.id} disconnected`)
+                connectionManager.removeConnection(connection)
+                console.log(`Websocket client (${connection.id}) disconnected`)
             })
 
             websocket.on('error', error => {
@@ -44,16 +42,5 @@ export class Server {
         })
 
         console.log(`Websocket listener started on port ${port}`)
-    }
-
-    announceAll(text) {
-        this.connections.forEach( connection => connection.announce(text) )
-    }
-
-    connectionFor(user) {
-        for (const connection of this.connections) {
-            if (connection.connectedUser === user) return connection
-        }
-        return null
     }
 }

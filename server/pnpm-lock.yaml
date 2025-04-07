@@ -8,17 +8,33 @@ importers:
 
   .:
     dependencies:
+      telnet:
+        specifier: github:TooTallNate/node-telnet#780340617e1f223de384cdfcb7cecf0a1a6f1159
+        version: https://codeload.github.com/TooTallNate/node-telnet/tar.gz/780340617e1f223de384cdfcb7cecf0a1a6f1159
       ulid:
         specifier: ^2.3.0
         version: 2.3.0
+      ultra-blessed:
+        specifier: github:melville/ultra-blessed#dlf
+        version: https://codeload.github.com/melville/ultra-blessed/tar.gz/cf009578c0f5bb4a3322b4f45a24bacdc427ed1a
       ws:
         specifier: ^8.18.1
         version: 8.18.1
 
 packages:
 
+  telnet@https://codeload.github.com/TooTallNate/node-telnet/tar.gz/780340617e1f223de384cdfcb7cecf0a1a6f1159:
+    resolution: {tarball: https://codeload.github.com/TooTallNate/node-telnet/tar.gz/780340617e1f223de384cdfcb7cecf0a1a6f1159}
+    version: 0.0.1
+
   ulid@2.3.0:
     resolution: {integrity: sha512-keqHubrlpvT6G2wH0OEfSW4mquYRcbe/J8NMmveoQOjUqmo+hXtO+ORCpWhdbZ7k72UtY61BL7haGxW6enBnjw==}
+    hasBin: true
+
+  ultra-blessed@https://codeload.github.com/melville/ultra-blessed/tar.gz/cf009578c0f5bb4a3322b4f45a24bacdc427ed1a:
+    resolution: {tarball: https://codeload.github.com/melville/ultra-blessed/tar.gz/cf009578c0f5bb4a3322b4f45a24bacdc427ed1a}
+    version: 0.2.1
+    engines: {node: '>= 8.0.0'}
     hasBin: true
 
   ws@8.18.1:
@@ -35,6 +51,10 @@ packages:
 
 snapshots:
 
+  telnet@https://codeload.github.com/TooTallNate/node-telnet/tar.gz/780340617e1f223de384cdfcb7cecf0a1a6f1159: {}
+
   ulid@2.3.0: {}
+
+  ultra-blessed@https://codeload.github.com/melville/ultra-blessed/tar.gz/cf009578c0f5bb4a3322b4f45a24bacdc427ed1a: {}
 
   ws@8.18.1: {}

@@ -25,11 +25,15 @@
     "name": "Generic User",
     "tell": {
       "dbSerializerTransform": "function",
-      "code": "function (text) { server.connectionFor(this)?.announce(text) }"
+      "code": "function (text) { connectionManager.announce(this, text) }"
     },
     "command_say": {
       "dbSerializerTransform": "function",
-      "code": "function (argStr) { server.announceAll(`${this.name} says, \"${argStr}\"`) }"
+      "code": "function (argStr) { connectionManager.announceAll(`${this.name} says, \"${argStr}\"`) }"
+    },
+    "command_who": {
+      "dbSerializerTransform": "function",
+      "code": "function () { const user = this; connectionManager.connections.forEach( conn => user.tell(`${conn.constructor.name} ${conn.id} ${conn.user?.name ?? ''}`) ) }"
     },
     "parent": "01JNY5TTYGCM2G14AWV5V0TGXA"
   },
@@ -78,19 +82,6 @@
       "interval": 60000,
       "args": [
         "ding"
-      ]
-    },
-    "01JPGN0PXJZKS4Y2DDF02AQ8JN": {
-      "id": "01JPGN0PXJZKS4Y2DDF02AQ8JN",
-      "func": {
-        "dbSerializerTransform": "function",
-        "code": "(a, b, c) => $mel.tell(`BOOM ${a} ${b} ${c}`)"
-      },
-      "runAt": 1742168213011,
-      "args": [
-        1,
-        2,
-        3
       ]
     }
   }
