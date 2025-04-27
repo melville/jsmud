@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { clearTask, scheduleTask } from './tasks.js'
+import { clearTask } from './tasks.js'
 
 /**
  * Database objects are special because:
@@ -10,10 +10,42 @@ import { clearTask, scheduleTask } from './tasks.js'
  */
 
 class DatabaseObject {
-    // This will be the ultimate parent for all objects.  We could add any built-in functionality we want here,
-    // and it would be available even to the root object in the DB.  Anything created via 'new DatabaseObject()`
-    // (as opposed to the createObject() primitive) will have no ID and no parent, not will it actually exist
+    // This will be the ultimate parent for all objects.  We can add any built-in functionality we want here,
+    // and it will be available even to the root object in the DB.  Anything created via 'new DatabaseObject()`
+    // (as opposed to the createObject() primitive) will have no ID and no parent, nor will it actually exist
     // in the database.  We only use this as the parent of the root object.
+
+    ancestors() {
+        const ancs = []
+        let next = this.parent
+        while (next) {
+            ancs.push(next)
+            next = next.parent
+        }
+        return ancs
+    }
+
+    descendants() {
+        const descs = []
+        for (const kid of this.children) {
+            descs.push(kid, ...kid.descendants())
+        }
+        return descs
+    }
+
+    leaves() {
+        const lvs = []
+        for (const kid of this.children) {
+            const d = kid.descendants()
+            if (d.length)
+                lvs.push(...kid.leaves())
+            else
+                lvs.push(kid)
+        }
+        return lvs
+    }
+
+    toString() { return `${this.hasOwnProperty('name') ? this.name : 'Unnamed Object'} (${this.id})` }
 }
 const rootParent = new DatabaseObject()
 
@@ -21,19 +53,22 @@ const rootParent = new DatabaseObject()
 global.$garbage = new DatabaseObject()
 
 export function createObject(parent, data) {
-    if (parent.constructor.name !== 'DatabaseObject')
+    if (!(parent instanceof DatabaseObject))
         throw new Error('Parent must be a database object')
     const obj = Object.create(parent)
     Object.assign(obj, data)
     obj.id = ulid() // Created objects will always get a new ID as an anti-footgun measure
+    obj.parent = parent
+    obj.children = new Set()
     db[obj.id] = obj
+    parent.children.add(obj)
     return obj
 }
 
 export function deleteObject(obj) {
     if (obj.constructor.name !== 'DatabaseObject')
         throw new Error('Object is not a database object')
-    if (children(obj).length)
+    if (obj.children.length)
         throw new Error('Cannot delete object with children')
     // Obj might still be referenced by other objects.  We change its parent to $garbage so it's obvious that
     // the object is dead when it's referenced
@@ -41,56 +76,25 @@ export function deleteObject(obj) {
     delete db[obj.id]
 }
 
-export function changeParent(obj, parent) {
-    if (parent.constructor.name !== 'DatabaseObject')
+export function changeParent(obj, newParent) {
+    if (!(newParent instanceof DatabaseObject))
         throw new TypeError('Invalid parent object')
     // Make sure the new parent isn't a descendant of obj
-    if (descendants(obj).includes(parent))
+    if (descendants(obj).includes(newParent))
         throw new Error('New parent is a descendant of the object')
-    Object.setPrototypeOf(obj, parent)
+    const oldParent = obj.parent
+    if (!oldParent)
+        throw new Error('Object has no parent.  Are you trying to reparent the root object?')
+    oldParent.children.delete(obj)
+    Object.setPrototypeOf(obj, newParent)
+    obj.parent = newParent
+    newParent.children.add(obj)
 }
 
-export function children(parent) {
-    const kids = []
-    for (const obj of Object.values(db)) {
-        if (Object.getPrototypeOf(obj) === parent)
-            kids.push(obj)
-    }
-    return kids
-}
-
-export function ancestors(obj) {
-    const ancs = []
-    let next = parent(obj)
-    while (next) {
-        ancs.push(next)
-        next = parent(next)
-    }
-    return ancs
-}
-
-export function descendants(obj) {
-    const descs = []
-    for (const kid of children(obj)) {
-        descs.push(kid, ...descendants(kid))
-    }
-    return descs
-}
-
-export function leaves(obj) {
-    const lvs = []
-    for (const kid of children(obj)) {
-        const d = descendants(kid)
-        if (d.length)
-            lvs.push(...leaves(kid))
-        else
-            lvs.push(kid)
-    }
-    return lvs
-}
-
-export function parent(obj) {
-    if (obj.constructor.name !== 'DatabaseObject')
+// This function will not be used unless we think something terrible has happened.  Parent will normally be looked
+// up via the .parent property on DB objects.
+export function findParent(obj) {
+    if (!(obj instanceof DatabaseObject))
         throw new TypeError('Not a database object')
     const parent = Object.getPrototypeOf(obj)
     // We don't want to expose anything above the root object, so we check for an id to confirm we're still in the DB
@@ -107,13 +111,12 @@ export function loadDatabase() {
     if (scheduled)
         Object.keys(scheduled).forEach( id => clearTask(id) )
 
-    const db = JSON.parse(fs.readFileSync(dbDataFile))
-    restoreDbObjects(db)
+    global.db = JSON.parse(fs.readFileSync(dbDataFile))
+    restoreDbObjects()
     // Setup shortcut refs for important objects
     for (const [name, id] of Object.entries(db.refs ?? {})) {
         global[`$${name}`] = db[id]
     }
-    global.db = db
 
     console.log(`Database loaded.  Created ${Object.keys(db).length - 1} objects.  Added ${Object.keys(db.refs).length} refs.`)
 }
@@ -133,18 +136,17 @@ function transformDbObjects(key, value) {
             else
                 return { dbSerializerTransform: 'function', code: value.toString() }
         case 'object':
+            if (value === null) return null
             if (value.constructor.name === 'Timeout')
                 return undefined // Ignore task timeouts, they will be recreated if the DB is restored
-            if (value.constructor.name === 'DatabaseObject')
+            if (value instanceof DatabaseObject)
                 if (this === db) { // top-level DB object, should be fully serialized
-                    const parentObj = Object.getPrototypeOf(value)
-                    let parent
-                    if (parentObj?.constructor.name === 'DatabaseObject')
-                        parent = parentObj.id
-                    return { dbSerializerTransform: 'dbObject', ...value, parent }
+                    return { dbSerializerTransform: 'dbObject', ...value }
                 } else {
                     return { dbSerializerTransform: 'ref', id: value.id } // DB object referenced somewhere else, store as a ref
                 }
+            if (value instanceof Set)
+                return { dbSerializerTransform: 'set', values: Array.from(value) }
             else
                 return value
         default:
@@ -152,19 +154,20 @@ function transformDbObjects(key, value) {
     }
 }
 
-function restoreDbObjects(db) {
+function restoreDbObjects() {
     for (const [id, obj] of Object.entries(db)) {
         // Everything but the 'refs' and 'tasks' fields should be a dbObject
         if (obj.dbSerializerTransform === 'dbObject') {
             // Transform function code back to functions
             for (const [field, value] of Object.entries(obj)) {
-                if (value.dbSerializerTransform === 'function')
+                if (value?.dbSerializerTransform === 'function')
                     obj[field] = new Function(`return ${value.code}`)()
             }
             // Set the parent object
             if (obj.parent) {
-                Object.setPrototypeOf(db[id], db[obj.parent])
-                delete db[id].parent
+                // Parent info will be an untransformed ref at this point.  It will get resolved later, but at this
+                // stage we need to dereference it manually
+                Object.setPrototypeOf(db[id], db[obj.parent.id])
             } else {
                 Object.setPrototypeOf(db[id], rootParent) // This is the root object
             }
@@ -172,25 +175,76 @@ function restoreDbObjects(db) {
             db[id] = obj // obj will have constructor.name === 'DatabaseObject'
         }
     }
-    restoreRefs(db, db)
+    restoreSets(db, [])
+    restoreRefs(db, [])
     restoreTasks(db)
 }
 
-function restoreRefs(node, db) {
-    if (typeof node !== 'object') return
+function restoreRefs(node, visited) {
+    if (typeof node !== 'object' || node === null || visited.includes(node)) return
+    visited.push(node)
     if (Array.isArray(node)) {
-        for (const entry of node) {
-            restoreRefs(entry, db)
+        for (const [index, entry] of node.entries()) {
+            if (entry?.dbSerializerTransform === 'ref') {
+                node[index] = db[entry.id]
+                // Since this was a ref to a DB object its props will be traversed elsewhere, we don't need to recurse
+            } else {
+                restoreRefs(entry, visited)
+            }
+        }
+        return
+    }
+    if (node instanceof Set) {
+        for (const member of new Set(node)) { // copy to avoid changing the set while we're iterating it
+            if (member?.dbSerializerTransform === 'ref') {
+                node.delete(member)
+                node.add(db[member.id])
+            } else {
+                restoreRefs(member, visited)
+            }
+        }
+        return
+    }
+    // Regular objects
+    for (const [key, value] of Object.entries(node)) {
+        if (value?.dbSerializerTransform === 'ref') {
+            node[key] = db[value.id]
+        } else {
+            restoreRefs(value, visited)
+        }
+    }
+}
+
+function restoreSets(node, visited) {
+    if (typeof node !== 'object' || node === null || visited.includes(node)) return
+    visited.push(node)
+    if (Array.isArray(node)) {
+        for (const [index, entry] of node.entries()) {
+            if (entry?.dbSerializerTransform === 'set') {
+                node[index] = new Set(entry.values)
+            }
+            restoreSets(node[index], visited)
+        }
+        return
+    }
+    if (node instanceof Set) {
+        for (const member of new Set(node)) { // copy to avoid modifying the set we're iterating over
+            if (member?.dbSerializerTransform === 'set') {
+                node.remove(member)
+                const set = new Set(member.values)
+                node.add(set)
+                restoreSets(set, visited)
+            } else {
+                restoreSets(member, visited)
+            }
         }
         return
     }
     for (const [key, value] of Object.entries(node)) {
-        if (value.dbSerializerTransform === 'ref') {
-            node[key] = db[value.id]
-            return
-        } else {
-            restoreRefs(value, db)
+        if (value?.dbSerializerTransform === 'set') {
+            node[key] = new Set(value.values)
         }
+        restoreSets(node[key], visited)
     }
 }
 
