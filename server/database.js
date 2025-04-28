@@ -91,16 +91,6 @@ export function changeParent(obj, newParent) {
     newParent.children.add(obj)
 }
 
-// This function will not be used unless we think something terrible has happened.  Parent will normally be looked
-// up via the .parent property on DB objects.
-export function findParent(obj) {
-    if (!(obj instanceof DatabaseObject))
-        throw new TypeError('Not a database object')
-    const parent = Object.getPrototypeOf(obj)
-    // We don't want to expose anything above the root object, so we check for an id to confirm we're still in the DB
-    return parent.id ? parent : null
-}
-
 const dbDataFile = process.argv[2]
 
 export function loadDatabase() {
