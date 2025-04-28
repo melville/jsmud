@@ -4,7 +4,8 @@
     "user": "01JND0MJEHG5TJZN5P9DWYH23V",
     "mel": "01JNYBK7GXM1YYER29VVARR09Y",
     "superUser": "01JP12YDJ1C99A16K1VB9CP29Z",
-    "dan": "01JP6SX31466DXS068R9RHW1KT"
+    "dan": "01JP6SX31466DXS068R9RHW1KT",
+    "bob": "01JP6SKFQNTMA9BTCMDVV9NZN3"
   },
   "01JNY5TTYGCM2G14AWV5V0TGXA": {
     "dbSerializerTransform": "dbObject",
@@ -13,9 +14,15 @@
       "dbSerializerTransform": "function",
       "code": "function test() { return this }"
     },
-    "toString": {
-      "dbSerializerTransform": "function",
-      "code": "function () { return `${this.name ?? 'Unnamed' } (${this.id})` }"
+    "parent": null,
+    "children": {
+      "dbSerializerTransform": "set",
+      "values": [
+        {
+          "dbSerializerTransform": "ref",
+          "id": "01JND0MJEHG5TJZN5P9DWYH23V"
+        }
+      ]
     },
     "name": "Root Object"
   },
@@ -35,14 +42,37 @@
       "dbSerializerTransform": "function",
       "code": "function () { const user = this; connectionManager.connections.forEach( conn => user.tell(`${conn.constructor.name} ${conn.id} ${conn.user?.name ?? ''}`) ) }"
     },
-    "parent": "01JNY5TTYGCM2G14AWV5V0TGXA"
+    "parent": {
+      "dbSerializerTransform": "ref",
+      "id": "01JNY5TTYGCM2G14AWV5V0TGXA"
+    },
+    "children": {
+      "dbSerializerTransform": "set",
+      "values": [
+        {
+          "dbSerializerTransform": "ref",
+          "id": "01JP12YDJ1C99A16K1VB9CP29Z"
+        },
+        {
+          "dbSerializerTransform": "ref",
+          "id": "01JP6SKFQNTMA9BTCMDVV9NZN3"
+        }
+      ]
+    }
   },
   "01JNYBK7GXM1YYER29VVARR09Y": {
     "dbSerializerTransform": "dbObject",
     "name": "Mel",
     "id": "01JNYBK7GXM1YYER29VVARR09Y",
     "password": "test",
-    "parent": "01JP12YDJ1C99A16K1VB9CP29Z"
+    "parent": {
+      "dbSerializerTransform": "ref",
+      "id": "01JP12YDJ1C99A16K1VB9CP29Z"
+    },
+    "children": {
+      "dbSerializerTransform": "set",
+      "values": []
+    }
   },
   "01JP12YDJ1C99A16K1VB9CP29Z": {
     "dbSerializerTransform": "dbObject",
@@ -56,21 +86,51 @@
       "dbSerializerTransform": "function",
       "code": "function () { const taskList = tasks(); this.tell(\"ID                         Time          Code\"); taskList.forEach( task => { const time = `${task.interval ? '@ ' : ''}${task.runAt || task.interval}`; this.tell(`${task.id} ${time.padEnd(13)} ${task.func.toString().substring(0, 60)}` ) } ) }"
     },
-    "parent": "01JND0MJEHG5TJZN5P9DWYH23V"
+    "parent": {
+      "dbSerializerTransform": "ref",
+      "id": "01JND0MJEHG5TJZN5P9DWYH23V"
+    },
+    "children": {
+      "dbSerializerTransform": "set",
+      "values": [
+        {
+          "dbSerializerTransform": "ref",
+          "id": "01JNYBK7GXM1YYER29VVARR09Y"
+        },
+        {
+          "dbSerializerTransform": "ref",
+          "id": "01JP6SX31466DXS068R9RHW1KT"
+        }
+      ]
+    }
   },
   "01JP6SKFQNTMA9BTCMDVV9NZN3": {
     "dbSerializerTransform": "dbObject",
     "name": "Bob",
     "password": "test",
     "id": "01JP6SKFQNTMA9BTCMDVV9NZN3",
-    "parent": "01JND0MJEHG5TJZN5P9DWYH23V"
+    "parent": {
+      "dbSerializerTransform": "ref",
+      "id": "01JND0MJEHG5TJZN5P9DWYH23V"
+    },
+    "children": {
+      "dbSerializerTransform": "set",
+      "values": []
+    }
   },
   "01JP6SX31466DXS068R9RHW1KT": {
     "dbSerializerTransform": "dbObject",
     "name": "Dan",
     "password": "test",
     "id": "01JP6SX31466DXS068R9RHW1KT",
-    "parent": "01JP12YDJ1C99A16K1VB9CP29Z"
+    "parent": {
+      "dbSerializerTransform": "ref",
+      "id": "01JP12YDJ1C99A16K1VB9CP29Z"
+    },
+    "children": {
+      "dbSerializerTransform": "set",
+      "values": []
+    }
   },
   "tasks": {
     "01JPGMG31TPWRVYBZ2036TC4FF": {

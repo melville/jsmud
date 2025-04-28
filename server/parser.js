@@ -43,7 +43,7 @@ function handleUnconnectedCommand(connection, command, argStr) {
     if (command.toLowerCase() === 'connect') {
         const args = argStr.split(/\s+/).filter( word => word ) // filter empty strings
         if (args.length === 2) {
-            const user = leaves($user).find( user => user.name === args[0] )
+            const user = $user.leaves().find( user => user.name === args[0] )
             if (user && user.password === args[1]) {
                 connection.user = user
                 connection.announce('*** Connected ***')

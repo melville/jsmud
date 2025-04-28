@@ -13,3 +13,6 @@ global.telnetListener = new TelnetListener(6970)
 // Prevent server death for unhandled sync or async errors
 process.on('uncaughtException', (err) => console.error('Unhandled exception:', err))
 process.on('unhandledRejection', (reason, promise) => console.error('Unhandled Rejection at:', promise, 'reason:', reason))
+
+// Convenience hacks
+Set.prototype.toString = function () { return `Set ${Array.from(this)}`}
