@@ -1,0 +1,57 @@
+body {
+    background-color: #aaa;
+}
+
+#pageContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100vh;
+    background-color: #aaa;
+}
+
+#termContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100%;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: black;
+}
+
+#outputPane {
+    flex-grow: 1;
+}
+
+#inputPane {
+    height: 4lh;
+    margin-bottom: 10px;
+    border-top: 1px solid #aaa;
+    padding-top: 5px;
+}
+
+#editorWindow {
+    position: absolute;
+    z-index: -1000;
+    top: 20px;
+    left: 20px;
+    width: 70vw;
+    height: 70vh;
+    background-color: #aaa;
+    border-radius: 5px;
+    border: 1px solid #000;
+}
+
+#editorHeader {
+    padding: 4px;
+    cursor: move;
+}
+
+#editor {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}

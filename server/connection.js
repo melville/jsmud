@@ -9,7 +9,12 @@ export class Connection {
     }
 
     get sourceAddress() { /* Should be implemented in child class */ throw Error('not implemented') }
-    announce(text) { /* Should be implemented in child classes */ throw Error('not implemented') }
+    send(data) { /* Should be implemented in child classes */ throw Error('not implemented') }
+    receive(data) { /* Should be implemented in child classes */ throw Error('not implemented') }
+    announce(text) {
+        this.send({ type: 'announce', text })
+    }
+
 }
 
 export class ConnectionManager {

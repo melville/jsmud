@@ -102,6 +102,18 @@
           "id": "01JP6SX31466DXS068R9RHW1KT"
         }
       ]
+    },
+    "command_@edit": {
+      "dbSerializerTransform": "function",
+      "code": "function (argstr, connection) {\n    const [objStr, propStr ] = argstr.split('.')\n    let obj\n    let objId\n    if (objStr.startsWith('$'))\n        objId = db.refs[objStr.substring(1)]\n    else\n        objId = objStr\n    obj = db[objId]\n    if (obj) {\n        connection.send({\n            type: 'edit',\n            value: obj[propStr].toString(),\n            obj: objId,\n            prop: propStr,\n            propType: typeof obj[propStr]\n        })\n    } else {\n        connection.announce(`Invalid property: ${argstr}`)\n    }\n}"
+    },
+    "command_@dump": {
+      "dbSerializerTransform": "function",
+      "code": "function (argstr, connection) { dumpDatabase(); connection.announce('Dumping database.'); }"
+    },
+    "command_@props": {
+      "dbSerializerTransform": "function",
+      "code": "function (argstr, connection) { const obj = argstr.startsWith('$') ? db[db.refs[argstr.substring(1)]] : db[argstr]; connection.announce(JSON.stringify(Object.keys(obj))); }"
     }
   },
   "01JP6SKFQNTMA9BTCMDVV9NZN3": {
