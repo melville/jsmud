@@ -105,7 +105,7 @@
     },
     "command_@edit": {
       "dbSerializerTransform": "function",
-      "code": "function (argstr, connection) {\n    const [objStr, propStr ] = argstr.split('.')\n    let obj\n    let objId\n    if (objStr.startsWith('$'))\n        objId = db.refs[objStr.substring(1)]\n    else\n        objId = objStr\n    obj = db[objId]\n    if (obj) {\n        connection.send({\n            type: 'edit',\n            value: obj[propStr].toString(),\n            obj: objId,\n            prop: propStr,\n            propType: typeof obj[propStr]\n        })\n    } else {\n        connection.announce(`Invalid property: ${argstr}`)\n    }\n}"
+      "code": "function (argstr, connection) {\n    const [objStr, propStr ] = argstr.split('.')\n    let obj\n    let objId\n    if (objStr.startsWith('$'))\n        objId = db.refs[objStr.substring(1)]\n    else\n        objId = objStr\n    obj = db[objId]\n    if (obj) {\n        connection.send({\n            type: 'edit',\n            value: obj[propStr].toString(),\n            obj: objId,\n            prop: propStr,\n            propType: typeof obj[propStr],\n            title: argstr,\n        })\n    } else {\n        connection.announce(`Invalid property: ${argstr}`)\n    }\n}"
     },
     "command_@dump": {
       "dbSerializerTransform": "function",

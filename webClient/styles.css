@@ -31,9 +31,8 @@ body {
     padding-top: 5px;
 }
 
-#editorWindow {
+.editorWindow {
     position: absolute;
-    z-index: -1000;
     top: 20px;
     left: 20px;
     width: 70vw;
@@ -43,12 +42,19 @@ body {
     border: 1px solid #000;
 }
 
-#editorHeader {
+.editorHeader {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     padding: 4px;
     cursor: move;
 }
 
-#editor {
+.editorTitle {
+    font-weight: bold;
+}
+
+.editor {
     margin: 0;
     padding: 0;
     width: 100%;

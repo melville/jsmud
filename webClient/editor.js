@@ -8,55 +8,76 @@ window.MonacoEnvironment = {
     )
 }
 
-let editor
-require(["vs/editor/editor.main"], function () {
-    editor = monaco.editor.create(document.getElementById('editor'), {
-        value: '',
-        language: 'javascript',
-        theme: 'vs-dark'
-    })
-})
-
-const container = document.getElementById('editorWindow')
-const header = document.getElementById('editorHeader')
-const offset = { x: 0, y: 0 }
-const closeButton = document.getElementById('editorCloseButton')
-const saveButton = document.getElementById('editorSaveButton')
-
-header.addEventListener("mousedown", function (event) {
-    console.log("mousedown event", event)
-    offset.x = event.clientX - container.offsetLeft
-    offset.y = event.clientY - container.offsetTop
-    document.addEventListener('mousemove', moveEditor)
-})
-
-header.addEventListener("mouseup", function () {
-    console.log("mouseup event", event)
-    document.removeEventListener('mousemove', moveEditor)
-})
-
-function moveEditor(event) {
-    console.log(`${event.clientX - offset.x}, ${event.clientY - offset.y}`)
-    container.style.left = `${event.clientX - offset.x}px`
-    container.style.top = `${event.clientY - offset.y}px`
+function moveEditor(event, window) {
+    window.style.left = `${event.clientX - window.dragOffset.x}px`
+    window.style.top = `${event.clientY - window.dragOffset.y}px`
 }
 
-closeButton.addEventListener("click", function (event) {
-    editor.getModel().setValue('')
-    container.style.zIndex = -1000
-})
-
-saveButton.addEventListener("click", function (event) {
-    websocket.send(JSON.stringify({
-        ...editor.jsmudData,
-        type: 'save',
-        value: editor.getModel().getValue(),
-    }))
-})
-
+let maxEditorZ = 1000
 window.setupEditor = function (data) {
     console.log("setup editor", data)
-    editor.jsmudData = data
-    editor.getModel().setValue(data.value)
-    container.style.zIndex = 1000
+
+    const editorTitle = document.createElement('div')
+    editorTitle.setAttribute('class', 'editorTitle')
+    editorTitle.innerHTML = data.title
+
+    const editorCloseButton = document.createElement('button')
+    editorCloseButton.innerHTML = 'Close'
+    editorCloseButton.addEventListener('click', function () {
+        document.getElementById('pageContainer').removeChild(editorWindow)
+    })
+
+    const editorSaveButton = document.createElement('button')
+    editorSaveButton.innerHTML = 'Save'
+
+    const editorControls = document.createElement('div')
+    editorControls.setAttribute('class', 'editorControls')
+    editorControls.append(editorSaveButton, editorCloseButton)
+
+    const editorHeader = document.createElement('div')
+    editorHeader.setAttribute('class', 'editorHeader')
+    const mouseMoveHandler = (event) => moveEditor(event, editorWindow)
+    editorHeader.addEventListener("mouseup", function (event) {
+        event.preventDefault()
+        document.removeEventListener('mousemove', mouseMoveHandler)
+    })
+    editorHeader.addEventListener("mousedown", function (event) {
+        editorWindow.dragOffset.x = event.clientX - editorWindow.offsetLeft
+        editorWindow.dragOffset.y = event.clientY - editorWindow.offsetTop
+        document.addEventListener('mousemove', mouseMoveHandler)
+    })
+    editorHeader.append(editorTitle, editorControls)
+
+    const editorId = `editor-${data.dest}-${data.propName}`
+    const editorDiv = document.createElement('div')
+    editorDiv.setAttribute('class', 'editor')
+    editorDiv.setAttribute('id', editorId)
+
+    const editorWindow = document.createElement('div')
+    editorWindow.addEventListener('mousedown', function (event) {
+        event.preventDefault()
+        editorWindow.style.zIndex = maxEditorZ++
+    })
+    editorWindow.setAttribute('class', 'editorWindow')
+    editorWindow.style.zIndex = maxEditorZ++
+    editorWindow.dragOffset = { x: 0, Y: 0 }
+    editorWindow.append(editorHeader, editorDiv)
+
+    document.getElementById('pageContainer').appendChild(editorWindow)
+
+    require(["vs/editor/editor.main"], function () {
+        const editor = monaco.editor.create(editorDiv, {
+            value: data.value,
+            language: 'javascript',
+            theme: 'vs-dark'
+        })
+        editor.jsmudData = data
+        editorSaveButton.addEventListener('click', function () {
+            websocket.send(JSON.stringify({
+                ...editor.jsmudData,
+                type: 'save',
+                value: editor.getModel().getValue(),
+            }))
+        })
+    })
 }
