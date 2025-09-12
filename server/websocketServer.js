@@ -12,7 +12,24 @@ class WebSocketConnection extends Connection {
     get sourceAddress() { console.log(this.webSocket); return this.webSocket._socket.remoteAddress }
 
     announce(text) {
-        this.webSocket.send(text)
+        this.send({ type: 'announce', text })
+    }
+
+    send(data) {
+        this.webSocket.send(JSON.stringify(data))
+    }
+
+    receive(data) {
+        switch (data.type) {
+            case 'input': // user input
+                handleInput(this, data.text)
+                break
+            case 'save':
+                handleSave(this, data)
+                break
+            default:
+                console.error(`[${this.id}] Unknown data type`, data)
+        }
     }
 }
 
@@ -28,7 +45,12 @@ export class WebSocketListener {
 
             websocket.on('message', message => {
                 console.log(`[${connection.id}] ${message}`)
-                handleInput(connection, message)
+                try {
+                    const data = JSON.parse(message)
+                    connection.receive(data)
+                } catch (e) {
+                    console.error(`[${connection.id}] error processing ${message}`, e)
+                }
             })
 
             websocket.on('close', () => {
@@ -42,5 +64,23 @@ export class WebSocketListener {
         })
 
         console.log(`Websocket listener started on port ${port}`)
+    }
+}
+
+function handleSave(connection, data) {
+    const obj = db[data.obj]
+    if (!obj) {
+        connection.announce(`Invalid save destination: ${data.obj}`)
+        return
+    }
+    if (data.propType === 'function') {
+        try {
+            obj[data.prop] = new Function(`return ${data.value}`)()
+            connection.announce(`Saved function: ${data.obj}.${data.prop}`)
+        } catch (e) {
+            connection.announce(`Failed to save function: ${e}`)
+        }
+    } else {
+        connection.announce(`Unsupported property type: ${data.propType}`)
     }
 }

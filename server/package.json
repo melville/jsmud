@@ -14,7 +14,6 @@
   "dependencies": {
     "telnet": "github:TooTallNate/node-telnet#780340617e1f223de384cdfcb7cecf0a1a6f1159",
     "ulid": "^2.3.0",
-    "ultra-blessed": "github:melville/ultra-blessed#dlf",
     "ws": "^8.18.1"
   }
 }

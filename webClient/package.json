@@ -1,0 +1,16 @@
+{
+  "name": "webclient",
+  "version": "1.0.0",
+  "description": "JSMUD web client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "monaco-editor": "^0.52.2"
+  }
+}
